@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <string.h>
 
-enum command{starter, cmd, r, c, text};
+enum command{progName, cmd, r, c, text};
 enum commandExecute{cHelp, cTest, cLpath, cRpath, cShortest};
 
 typedef struct {
@@ -11,6 +11,18 @@ typedef struct {
   	int cols;
   	unsigned char *cells;
 } Map;
+
+int power(int base, int exponent) {
+    
+	int	result = 1;
+
+	for(int i = 0; i < exponent; i++){
+		result*=base;
+	}
+
+	return result;
+
+}
 
 int parseArgs(int argc, char* argv[]){
 
@@ -55,7 +67,7 @@ int parseArgs(int argc, char* argv[]){
 
 FILE* fileOpen(char *file){
 
-	printf("%s \n", file);
+	//printf("%s \n", file);
 	FILE *f = fopen(file, "r");
 
 	if(f != NULL){
@@ -75,6 +87,13 @@ Map* mapConstruct(int rows, int cols)
 	tempMap->rows = rows;
 	tempMap->cells = malloc((cols * rows) * sizeof(unsigned char));
 
+	if(tempMap == NULL){
+		fprintf(stderr, "ERROR: MALLOC FAILED!");
+	}
+	if(tempMap->cells == NULL){
+		fprintf(stderr, "ERROR: MALLOC FAILED!");
+	}
+
 	return tempMap;
 } 
 
@@ -85,15 +104,33 @@ void mapDeconstruct(Map *map){
 
 }
 
-//bool isBorder(Map *map, int r, int c, int border){}
+bool isBorder(Map *map, int r, int c, int border){
+
+	int index = (r - 1) * map->cols + c;
+
+	if((map->cells[index] & power(2, border)) == power(2, border)){
+		return true;
+	}
+	else{
+		return false;
+	}
+
+}
 
 //bool startBorder(Map *map, int r, int c, int leftright){}
 
 int main(int argc, char* argv[]){
 
-	Map *map = mapConstruct(6, 7);
+	Map *map = mapConstruct(6,7);
+	int x = power(2, 2);
+	printf("%d\n", x);
+	FILE *file = fileOpen(argv[argc - 1]);
+
+	if(file != NULL){
+		printf("kar\n");
+		fclose(file);
+	}
 	parseArgs(argc, argv);
-	fileOpen(argv[argc-1]);
 	mapDeconstruct(map);
 
 }
