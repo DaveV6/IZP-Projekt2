@@ -6,8 +6,8 @@
 
 enum command{progName, command, r, c, txtFile};
 enum commandExecute{cHelp, cTest, cLpath, cRpath, cShortest};
-enum direction{R, U, L, D};
-enum border{left, top, right, bottom};
+enum direction{R, U, L, D, CONTROL};
+enum border{left, vertical, right};
 
 typedef struct {
 	int rows;
@@ -19,21 +19,23 @@ Map *mapConstruct(int rows, int cols);
 void mapDeconstruct(Map *map);
 int power(int base, int exponent);
 bool isBorder(Map *map, int r, int c, int border);
-int parseArgs(int argc, char* argv[]);
+int parseArgs(int argc, char* argv[], int* startR, int* startC);
 Map *readMapFromFile(char *filename);
 FILE* fileOpen(char *file);
-bool checkMaze(Map *map);
-
-//bool startBorder(Map *map, int r, int c, int leftright){}
+//bool checkMaze(Map *map);
+bool isExit(Map *map, int r, int c);
+int start_border(Map *map, int r, int c, int leftright);
 
 int main(int argc, char* argv[]){
 
-	int args = parseArgs(argc, argv);
+	int startR = 0;
+	int startC = 0;
+	int args = parseArgs(argc, argv, &startR, &startC);
+	int direction = -100;
 
 	if(argc < 2){
 		fprintf(stderr, "ERROR: ENTER MORE ARGUMENTS!\n");
 	}
-
 
 	Map *map = readMapFromFile(argv[argc-1]);
 
@@ -48,23 +50,22 @@ int main(int argc, char* argv[]){
 
 			case cTest:
 
-				checkMaze(map);
-				if(checkMaze == true){
-					fprintf(stdout, "VALID");
-				}
-				else{
-					fprintf(stderr, "INVALID");
-				}
+				fprintf(stdout, "TEST");
 				break;
 
 			case cLpath:
 
 				fprintf(stdout, "LEFT PATH\n");
+				direction = start_border(map, startR, startC, cLpath);
+				printf("%d\n", direction);
 				break;
 
 			case cRpath:
 
 				fprintf(stdout, "RIGHT PATH\n");
+				direction = start_border(map, startR, startC, cRpath);
+				printf("%d\n", direction);
+				
 				break;
 
 		}
@@ -76,41 +77,81 @@ int main(int argc, char* argv[]){
 
 }
 
-bool checkMaze(Map *map){
+//todo
 
-	int rows, cols;
-	rows = map->rows;
-	cols = map->cols;
+int rightPath(Map *map, int r, int c){
+	while(!isExit(map, r, c)){
 
-	if(isBorder())
+	}
+}
+
+//needs to be fixed
+int start_border(Map *map, int r, int c, int leftright){
+
+	int parity = (r+c) % 2;
+
+    if(leftright == cRpath){
+        if(c == 0 && !isBorder(map, r, c, left)){
+            return R;
+        }
+        if(r == 0 && !isBorder(map, r, c, vertical) && parity == 0){
+            return D;
+        }
+        if(c == map->cols - 1 && !isBorder(map, r, c, right)){
+            return L;
+        }
+        if(r == map->rows - 1 && !isBorder(map, r, c, vertical) && parity != 0){
+            return U;
+        }
+    }
+
+    return -1;
 
 }
 
-int changePos(Map *map, int r, int c){
+void changePos(int* r, int* c, int direction){
 
-	
+	if(direction == L){
+		(*c)--;
+	}
+	if(direction == R){
+		(*c)++;
+	}
+	if(direction == U){
+		(*r)--;
+	}
+	if(direction == D){
+		(*r)++;
+	}
 
 }
 
 bool isExit(Map *map, int r, int c){
 
-	if(r == 1 || c == 1 || r == map->rows || c == map->cols){
-		if(!isBorder(map, r, c, left) && (c < 1)){
+	int parity = (r+c) % 2;
+
+	if(r == 1){
+		if(!isBorder(map, r, c, vertical) && parity == 0){
 			return true;
 		}
-		if(!isBorder(map, r, c, top) && (r < 1)){
+	}
+	if(r == map->rows){
+		if(!isBorder(map, r, c, vertical) && parity != 0){
 			return true;
 		}
-		if(!isBorder(map, r, c, right) && (c > map->cols)){
+	}
+	if(c == 1){
+		if(!isBorder(map, r, c, left)){
 			return true;
 		}
-		if(!isBorder(map, r, c, bottom) && (r > map->rows)){
+	}
+	if(c == map->cols){
+		if(!isBorder(map, r, c, right)){
 			return true;
 		}
 	}
 
 	return false;
-
 }
 
 int power(int base, int exponent) {
@@ -162,7 +203,7 @@ bool isBorder(Map *map, int r, int c, int border){
 
 }
 
-int parseArgs(int argc, char* argv[]){
+int parseArgs(int argc, char* argv[], int* startR, int* startC){
 
 	switch(argc){
 
@@ -184,6 +225,9 @@ int parseArgs(int argc, char* argv[]){
 
 		case 5:
 			
+			*startC = strtol(argv[c], NULL, 10) - 1;
+			*startR = strtol(argv[r], NULL, 10) - 1;
+
 			if(!strcmp(argv[command], "--lpath")){
 				return cLpath;
 			}
