@@ -7,7 +7,10 @@
 enum command{progName, command, r, c, txtFile};
 enum commandExecute{cHelp, cTest, cLpath, cRpath, cShortest};
 enum direction{R, U, L, D, CONTROL};
-enum border{left, vertical, right};
+enum border{left, right, horizontal};
+
+#define RPATH -1
+#define LPATH 1
 
 typedef struct {
 	int rows;
@@ -17,21 +20,22 @@ typedef struct {
 
 Map *mapConstruct(int rows, int cols);
 void mapDeconstruct(Map *map);
-int power(int base, int exponent);
 bool isBorder(Map *map, int r, int c, int border);
 int parseArgs(int argc, char* argv[], int* startR, int* startC);
 Map *readMapFromFile(char *filename);
 FILE* fileOpen(char *file);
-//bool checkMaze(Map *map);
-bool isExit(Map *map, int r, int c);
+//int checkMaze(Map *map);
+bool isExit(Map *map, int r, int c, int direction);
 int start_border(Map *map, int r, int c, int leftright);
+void changePos(int* r, int* c, int direction);
+int changeDir(Map *map, int r, int c, int leftright, int direction);
 
 int main(int argc, char* argv[]){
 
 	int startR = 0;
 	int startC = 0;
+	int direction = -1;
 	int args = parseArgs(argc, argv, &startR, &startC);
-	int direction = -100;
 
 	if(argc < 2){
 		fprintf(stderr, "ERROR: ENTER MORE ARGUMENTS!\n");
@@ -50,62 +54,148 @@ int main(int argc, char* argv[]){
 
 			case cTest:
 
-				fprintf(stdout, "TEST");
+				if(map == NULL){
+					fprintf(stdout, "Invalid\n");
+				}else{
+					fprintf(stdout, "Valid\n");
+				}
+
 				break;
 
 			case cLpath:
 
-				fprintf(stdout, "LEFT PATH\n");
-				direction = start_border(map, startR, startC, cLpath);
-				printf("%d\n", direction);
+				direction = start_border(map, startR, startC, LPATH);
+				
+				fprintf(stdout, "%d,%d\n", startR, startC);
+				
+				while(!isExit(map, startR, startC, direction)){
+					
+					direction = changeDir(map, startR, startC, LPATH, direction);
+				
+					if(!isExit(map, startR, startC, direction)){
+						changePos(&startR, &startC, direction);
+						fprintf(stdout, "%d,%d\n", startR, startC);
+					}
+				}
+
 				break;
 
 			case cRpath:
-
-				fprintf(stdout, "RIGHT PATH\n");
-				direction = start_border(map, startR, startC, cRpath);
-				printf("%d\n", direction);
+				direction = start_border(map, startR, startC, RPATH);
 				
+				fprintf(stdout, "%d,%d\n", startR, startC);
+
+				while(!isExit(map, startR, startC, direction)){
+					
+					direction = changeDir(map, startR, startC, RPATH, direction);
+				
+					if(!isExit(map, startR, startC, direction)){
+						changePos(&startR, &startC, direction);
+						fprintf(stdout, "%d,%d\n", startR, startC);
+					}
+				}
+
 				break;
 
 		}
 
 	}
-	mapDeconstruct(map);
+	
+	if(map != NULL){
+		mapDeconstruct(map);
+		map = NULL;
+	}
 
 	return 0;
 
 }
 
-//todo
+int changeDir(Map *map, int r, int c, int leftright, int direction){
 
-int rightPath(Map *map, int r, int c){
-	while(!isExit(map, r, c)){
+	direction += leftright;
+
+	if(direction == CONTROL){
+		direction = R;
+	}
+	if(direction == -1){
+		direction = D;
+	}
+
+	while(isBorder(map, r, c, direction)){
+		direction -= leftright;
+
+		if(direction == CONTROL){
+			direction =  R;
+		}
+		if(direction == -1){
+			direction =  D;
+		}
 
 	}
+
+	return direction;
+
 }
 
-//needs to be fixed
 int start_border(Map *map, int r, int c, int leftright){
 
-	int parity = (r+c) % 2;
+	if(leftright == LPATH){
+        if(c == 1 && (r % 2) != 0){
+			return D;
+		}
+		if(c == 1 && (r % 2) == 0){
+			return R;
+		}
+		if(c == map->cols && (r % 2) != 0){
+			return L;
+		}
+		if(c == map->cols && (r % 2) == 0){
+			return U;
+		}
+		if(r == 1){
+			return D;
+		}
+		if(r == map->rows){
+			return U;
+		}
+    }
 
-    if(leftright == cRpath){
-        if(c == 0 && !isBorder(map, r, c, left)){
-            return R;
-        }
-        if(r == 0 && !isBorder(map, r, c, vertical) && parity == 0){
-            return D;
-        }
-        if(c == map->cols - 1 && !isBorder(map, r, c, right)){
-            return L;
-        }
-        if(r == map->rows - 1 && !isBorder(map, r, c, vertical) && parity != 0){
-            return U;
-        }
+    if(leftright == RPATH){
+        if(c == 1 && (r % 2) != 0){
+			return R;
+		}
+		if(c == 1 && (r % 2) == 0){
+			return R;
+		}
+		if(c == map->cols && (r % 2) != 0){
+			return L;
+		}
+		if(c == map->cols && (r % 2) == 0){
+			return L;
+		}
+		if(r == 1){
+			return D;
+		}
+		if(r == map->rows){
+			return U;
+		}
     }
 
     return -1;
+
+}
+
+int checkMaze(Map *map){
+
+	for (int i = 0; i < map->rows; i++) {
+        for (int j = 0; j < map->cols - 1; j++) {
+            if (isBorder(map, i, j, right) != isBorder(map, i, j + 1, left)) {
+                return 0;
+            }
+        }
+    }
+
+    return 1;
 
 }
 
@@ -126,58 +216,36 @@ void changePos(int* r, int* c, int direction){
 
 }
 
-bool isExit(Map *map, int r, int c){
+bool isExit(Map *map, int r, int c, int direction){
 
-	int parity = (r+c) % 2;
-
-	if(r == 1){
-		if(!isBorder(map, r, c, vertical) && parity == 0){
-			return true;
-		}
+	if(r == 1 && !isBorder(map, r, c, direction) && direction == U){
+		return true;
 	}
-	if(r == map->rows){
-		if(!isBorder(map, r, c, vertical) && parity != 0){
-			return true;
-		}
+	if(r == map->rows && !isBorder(map, r, c, direction) && direction == D){
+		return true;
 	}
-	if(c == 1){
-		if(!isBorder(map, r, c, left)){
-			return true;
-		}
+	if(c == 1 && !isBorder(map, r, c, direction) && direction == L){
+		return true;
 	}
-	if(c == map->cols){
-		if(!isBorder(map, r, c, right)){
-			return true;
-		}
+	if(c == map->cols && !isBorder(map, r, c, direction) && direction == R){
+		return true;
 	}
 
 	return false;
 }
 
-int power(int base, int exponent) {
-    
-	int	result = 1;
-
-	for(int i = 0; i < exponent; i++){
-		result*=base;
-	}
-
-	return result;
-
-}
-
-Map* mapConstruct(int rows, int cols)
-{
+Map* mapConstruct(int rows, int cols){
  	Map *tempMap = malloc(sizeof(Map));
-	tempMap->cols = cols;
-	tempMap->rows = rows;
-	tempMap->cells = malloc((cols * rows) * sizeof(unsigned char));
 
-	if(tempMap == NULL){
-		fprintf(stderr, "ERROR: MALLOC FAILED!");
-	}
-	if(tempMap->cells == NULL){
-		fprintf(stderr, "ERROR: MALLOC FAILED!");
+	if(tempMap != NULL){
+		tempMap->cols = cols;
+		tempMap->rows = rows;
+		tempMap->cells = malloc((cols * rows) * sizeof(unsigned char));
+
+		if(tempMap->cells == NULL){
+			fprintf(stderr, "ERROR: MALLOC FAILED!");
+		}
+
 	}
 
 	return tempMap;
@@ -186,21 +254,42 @@ Map* mapConstruct(int rows, int cols)
 void mapDeconstruct(Map *map){
 
   	free(map->cells);
+	map->cells = NULL;
 	free(map);
 
 }
 
 bool isBorder(Map *map, int r, int c, int border){
 
-	int index = (r - 1) * map->cols + c;
+    switch (border)
+    {
+    case R:
+        border = right;
+        break;
+    case L:
+        border = left;
+        break;
+    case U:
+        if ((r+c) % 2 == 0){
+			border = horizontal;
+		}
+        else{
+			return true;
+		}
+        break;
+    case D:
+        if ((r+c) % 2 != 0){
+			border = horizontal;
+		}
+        else{
+			return true;
+		}
+        break;
+    }
+    int index = (r - 1) * map->cols + c - 1;
+    int value = map->cells[index] - '0';
 
-	if((map->cells[index] & power(2, border)) == power(2, border)){
-		return true;
-	}
-	else{
-		return false;
-	}
-
+    return (value & (1 << border)) != 0;
 }
 
 int parseArgs(int argc, char* argv[], int* startR, int* startC){
@@ -225,8 +314,8 @@ int parseArgs(int argc, char* argv[], int* startR, int* startC){
 
 		case 5:
 			
-			*startC = strtol(argv[c], NULL, 10) - 1;
-			*startR = strtol(argv[r], NULL, 10) - 1;
+			*startR = strtol(argv[r], NULL, 10);
+			*startC = strtol(argv[c], NULL, 10);
 
 			if(!strcmp(argv[command], "--lpath")){
 				return cLpath;
@@ -257,23 +346,31 @@ Map *readMapFromFile(char *filename){
     }
 
     Map *map = mapConstruct(rows, cols);
-
-   fgetc(f);
+	int count = 0;
+   	fgetc(f);
 
     for (int i = 0; i < rows * cols; i++){
         char cells;
+		
         while (isspace(cells = fgetc(f))){
         }
 
         if (cells == EOF){
-            fprintf(stderr, "ERROR: UNEXPECTED END OF FILE\n");
             mapDeconstruct(map);
             fclose(f);
             return NULL;
         }
+		if(cells < '0' || cells > '7'){
+			return NULL;
+		}
 
+		count++;
         map->cells[i] = cells;
     }
+
+	if(count != map->rows*map->cols){
+		return NULL;
+	}
 
     fclose(f);
     return map;
