@@ -169,17 +169,19 @@ int changeDir(Map *map, int r, int c, int leftright, int direction) {
 /// @param leftright left or right path
 /// @return the function returns a direction which we should face
 int startBorder(Map *map, int r, int c, int leftright) {
+    int odd = r % 2; 
+
     if (leftright == L_PATH) {
-        if (c == 1 && (r % 2) != 0) {
+        if (c == 1 && odd != 0) {
             return D_DIRECTION;
         }
-        if (c == 1 && (r % 2) == 0) {
+        if (c == 1 && odd == 0) {
             return R_DIRECTION;
         }
-        if (c == map->cols && (r % 2) != 0) {
+        if (c == map->cols && odd != 0) {
             return L_DIRECTION;
         }
-        if (c == map->cols && (r % 2) == 0) {
+        if (c == map->cols && odd == 0) {
             return U_DIRECTION;
         }
         if (r == 1) {
@@ -188,17 +190,18 @@ int startBorder(Map *map, int r, int c, int leftright) {
         if (r == map->rows) {
             return U_DIRECTION;
         }
-    } else if (leftright == R_PATH) {
-        if (c == 1 && (r % 2) != 0) {
+    } 
+    else if (leftright == R_PATH) {
+        if (c == 1 && odd != 0) {
             return R_DIRECTION;
         }
-        if (c == 1 && (r % 2) == 0) {
+        if (c == 1 && odd == 0) {
             return R_DIRECTION;
         }
-        if (c == map->cols && (r % 2) != 0) {
+        if (c == map->cols && odd != 0) {
             return L_DIRECTION;
         }
-        if (c == map->cols && (r % 2) == 0) {
+        if (c == map->cols && odd == 0) {
             return L_DIRECTION;
         }
         if (r == 1) {
@@ -289,6 +292,7 @@ void mapDeconstruct(Map *map) {
 bool isBorder(Map *map, int r, int c, int border) {
     int index = (r - 1) * map->cols + c - 1;
     int val = map->cells[index] - '0';
+    int parity = (r+c) % 2;
 
     switch (border) {
         case R_DIRECTION:
@@ -297,17 +301,19 @@ bool isBorder(Map *map, int r, int c, int border) {
         case L_DIRECTION:
             border = LEFT_BORDER;
             break;
-        case U_DIRECTION:
-            if ((r + c) % 2 == 0) {
+        case D_DIRECTION:
+            if (parity != 0) {
                 border = HORIZONTAL_BORDER;
-            } else {
+            } 
+            else {
                 return true;
             }
             break;
-        case D_DIRECTION:
-            if ((r + c) % 2 != 0) {
+        case U_DIRECTION:
+            if (parity == 0) {
                 border = HORIZONTAL_BORDER;
-            } else {
+            } 
+            else {
                 return true;
             }
             break;
