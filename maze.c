@@ -285,7 +285,7 @@ void mapDeconstruct(Map *map) {
 /// @param r the row for which we check if it has a border
 /// @param c the column for which we check if it has a border
 /// @param border the border for which we check if it is true
-/// @return if the border is present, and the function returns true; otherwise, it returns false.
+/// @return if the border is present and the function returns true otherwise it returns false.
 bool isBorder(Map *map, int r, int c, int border) {
     int index = (r - 1) * map->cols + c - 1;
     int val = map->cells[index] - '0';
@@ -317,10 +317,10 @@ bool isBorder(Map *map, int r, int c, int border) {
 }
 
 /// @brief the function parses arguments and switches them depending on how many the user inputs
-/// @param argc - count of arguments
-/// @param argv - array of arguments
-/// @param startR - starting row which the user inputs
-/// @param startC - starting column which the user inputs
+/// @param argc count of arguments
+/// @param argv array of arguments
+/// @param startR starting row which the user inputs
+/// @param startC starting column which the user inputs
 /// @return the return depends on which case the user triggers
 int parseArgs(int argc, char *argv[], int *startR, int *startC) {
     switch (argc) {
@@ -418,7 +418,7 @@ Map *readMapFromFile(char *filename) {
 }
 
 /// @brief the functions opens the .txt file from user input
-/// @param file 
+/// @param file the file from user input
 /// @return file
 FILE *fileOpen(char *file) {
     FILE *f = fopen(file, "r");
