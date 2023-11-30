@@ -1,3 +1,10 @@
+/** 
+ *  IZP PROJECT 2 - working with data structures
+ *  Author: David Bujzas, xbujzad00@stud.fit.vutbr.cz 
+ *  Date: 20.11.2023 
+ *  Note: The program takes in arguments from the user and uses them to seek paths out of the maze using the right or left hand rule
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -5,19 +12,19 @@
 #include <ctype.h>
 
 enum Command {
-    PROG_NAME, COMMAND, R, C, TXT_FILE
+    PROG_NAME, COMMAND, R, C, TXT_FILE //arguments
 };
 
 enum CommandExecute {
-    C_HELP, C_TEST, C_LPATH, C_RPATH, C_SHORTEST
+    C_HELP, C_TEST, C_LPATH, C_RPATH, C_SHORTEST //execution of arguments
 };
 
 enum Direction {
-    R_DIRECTION, U_DIRECTION, L_DIRECTION, D_DIRECTION, CONTROL_DIRECTION
+    R_DIRECTION, U_DIRECTION, L_DIRECTION, D_DIRECTION, CONTROL_DIRECTION //directions
 };
 
 enum Border {
-    LEFT_BORDER, RIGHT_BORDER, HORIZONTAL_BORDER
+    LEFT_BORDER, RIGHT_BORDER, HORIZONTAL_BORDER //borders
 };
 
 #define R_PATH -1
@@ -39,7 +46,7 @@ bool isExit(Map *map, int r, int c, int direction);
 int startBorder(Map *map, int r, int c, int leftright);
 void changePos(int *r, int *c, int direction);
 int changeDir(Map *map, int r, int c, int leftright, int direction);
-int path(Map *map, int r, int c, int direction, int leftright);
+void path(Map *map, int r, int c, int direction, int leftright);
 
 int main(int argc, char *argv[]) {
     int startR = 0;
@@ -56,27 +63,41 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr, "ERROR: TOO MANY ARGUMENTS!\n");
 		return -1;
 	}
-
+    
     Map *map = readMapFromFile(argv[argc - 1]);
 
+    //if statement which checks if the user input the correct arguments
     if (args != -1) {
-
+        //switching arguments between different cases
         switch (args) {
 
-            case C_HELP:
-                fprintf(stdout, "THE GOAL OF THE PROGRAM IS TO EXIT THE MAZE\n");
+            case C_HELP: //if the user inputs --help the program outputs how to correctly use the program
+                fprintf(stdout, "This program solves a maze which the user inputs from a .txt file using the following arguments:\n--help\n--test maze.txt - the argument tests if the .txt file is valid\n--lpath r c maze.txt - starts the path seeking sequence using the left hand rule\n--rpath r c maze.txt - starts the path seeking sequence using the right hand rule\n");
                 break;
 
-            case C_TEST:
-                fprintf(stdout, map ? "Valid\n" : "Invalid\n");
+            case C_TEST: //if the map is NULL it is Invalid
+                if(map == NULL) {
+                    fprintf(stdout, "Invalid\n");
+                }
+                else {
+                    fprintf(stdout, "Valid\n");
+                }
                 break;
 
-            case C_LPATH:
+            case C_LPATH: //the program checks if the map is NULL, if it isn't it starts the path seeking sequence for the left hand rule
+                if(map == NULL) {
+                    fprintf(stderr, "FAILED TO READ MAP INCORRECT ARGUMENTS!\n");
+                    break;
+                }
                 direction = startBorder(map, startR, startC, L_PATH);
                 path(map, startR, startC, direction, L_PATH);
                 break;
 
-            case C_RPATH:
+            case C_RPATH: //the program checks if the map is NULL, if it isn't it starts the path seeking sequence for the right hand rule
+                if(map == NULL) {
+                    fprintf(stderr, "FAILED TO READ MAP INCORRECT ARGUMENTS!\n");
+                    break;
+                }
                 direction = startBorder(map, startR, startC, R_PATH);
 				path(map, startR, startC, direction, R_PATH);
                 break;
@@ -90,7 +111,14 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-int path(Map *map, int r, int c, int direction, int leftright) {
+/// @brief the function moves us from the entrance to the exit
+/// @param map the map of the matrix
+/// @param r the starting row
+/// @param c the starting column
+/// @param direction the direction in which we are starting
+/// @param leftright left or  right path
+/// @return it will print the left or right path depending on user input
+void path(Map *map, int r, int c, int direction, int leftright) {
 	fprintf(stdout, "%d,%d\n", r, c);
 
 	while (!isExit(map, r, c, direction)) {
@@ -101,11 +129,15 @@ int path(Map *map, int r, int c, int direction, int leftright) {
 			fprintf(stdout, "%d,%d\n", r, c);
 		}
 	}
-
-	return r;
-	return c;
 }
 
+/// @brief the function changes the direction we are facing at
+/// @param map the map of the matrix
+/// @param r the row we are located at
+/// @param c the column we are located at
+/// @param leftright left or right path
+/// @param direction the direction we are facing in
+/// @return it returns the changed direction
 int changeDir(Map *map, int r, int c, int leftright, int direction) {
     direction += leftright;
 
@@ -130,6 +162,12 @@ int changeDir(Map *map, int r, int c, int leftright, int direction) {
     return direction;
 }
 
+/// @brief the functions figures out our starting direction depending on which cell we are starting on
+/// @param map the map of the matrix
+/// @param r the starting row
+/// @param c the starting column
+/// @param leftright left or right path
+/// @return the function returns a direction which we should face
 int startBorder(Map *map, int r, int c, int leftright) {
     if (leftright == L_PATH) {
         if (c == 1 && (r % 2) != 0) {
@@ -174,20 +212,10 @@ int startBorder(Map *map, int r, int c, int leftright) {
     return -1;
 }
 
-int checkMaze(Map *map) {
-    for (int i = 0; i < map->rows; i++) {
-        for (int j = 0; j < map->cols - 1; j++) {
-            if (isBorder(map, i, j, RIGHT_BORDER) != isBorder(map, i, j + 1, LEFT_BORDER)) {
-                return 0;
-            }
-            if (isBorder(map, i + 1, j, HORIZONTAL_BORDER) != isBorder(map, i, j, HORIZONTAL_BORDER)) {
-                return 0;
-            }
-        }
-    }
-    return 1;
-}
-
+/// @brief the function changes the position we are located at
+/// @param r the row we are located at
+/// @param c the column we are located at
+/// @param direction the current direction
 void changePos(int *r, int *c, int direction) {
     if (direction == L_DIRECTION) {
         (*c)--;
@@ -200,6 +228,12 @@ void changePos(int *r, int *c, int direction) {
     }
 }
 
+/// @brief the function checks if the current cell is an exit
+/// @param map the map of the matrix
+/// @param r the row for which we check the exit
+/// @param c the col for which we check the exit
+/// @param direction the direction in which we check the exit 
+/// @return the function returns true if the cell is an exit and false if it is not
 bool isExit(Map *map, int r, int c, int direction) {
     if (r == 1 && !isBorder(map, r, c, direction) && direction == U_DIRECTION) {
         return true;
@@ -216,6 +250,11 @@ bool isExit(Map *map, int r, int c, int direction) {
     return false;
 }
 
+
+/// @brief the function allocates memory for the map
+/// @param rows the amount of rows the matrix has
+/// @param cols the amount of columns the matrix has
+/// @return map
 Map *mapConstruct(int rows, int cols) {
     Map *tempMap = malloc(sizeof(Map));
 
@@ -234,11 +273,19 @@ Map *mapConstruct(int rows, int cols) {
     return tempMap;
 }
 
+/// @brief the functions frees the allocated memory
+/// @param map the map of the matrix
 void mapDeconstruct(Map *map) {
     free(map->cells);
     free(map);
 }
 
+/// @brief the function checks if there is a border in each direction using left shift
+/// @param map the map of the matrix
+/// @param r the row for which we check if it has a border
+/// @param c the column for which we check if it has a border
+/// @param border the border for which we check if it is true
+/// @return if the border is present, and the function returns true; otherwise, it returns false.
 bool isBorder(Map *map, int r, int c, int border) {
     int index = (r - 1) * map->cols + c - 1;
     int val = map->cells[index] - '0';
@@ -269,6 +316,12 @@ bool isBorder(Map *map, int r, int c, int border) {
     return (val & (1 << border)) != 0;
 }
 
+/// @brief the function parses arguments and switches them depending on how many the user inputs
+/// @param argc - count of arguments
+/// @param argv - array of arguments
+/// @param startR - starting row which the user inputs
+/// @param startC - starting column which the user inputs
+/// @return the return depends on which case the user triggers
 int parseArgs(int argc, char *argv[], int *startR, int *startC) {
     switch (argc) {
         case 2:
@@ -300,6 +353,9 @@ int parseArgs(int argc, char *argv[], int *startR, int *startC) {
     return -1;
 }
 
+/// @brief the functions reads the matrix from the .txt file and assigns values to rows, columns and cells
+/// @param filename 
+/// @return map
 Map *readMapFromFile(char *filename) {
     FILE *f = fileOpen(filename);
 
@@ -310,6 +366,12 @@ Map *readMapFromFile(char *filename) {
     int rows, cols;
     if (fscanf(f, "%d %d", &rows, &cols) != 2) {
         fprintf(stderr, "ERROR: FAILED TO READ ROWS AND COLUMNS FROM FILE\n");
+        fclose(f);
+        return NULL;
+    }
+
+    if(rows < 0 || cols < 0){
+        fprintf(stderr, "NEGATIVE NUMBERS IN .TXT FILE!\n");
         fclose(f);
         return NULL;
     }
@@ -355,12 +417,10 @@ Map *readMapFromFile(char *filename) {
     return map;
 }
 
+/// @brief the functions opens the .txt file from user input
+/// @param file 
+/// @return file
 FILE *fileOpen(char *file) {
     FILE *f = fopen(file, "r");
-
-    if (f == NULL) {
-        fprintf(stderr, "ERROR: FILE FAILED TO OPEN! TRY AGAIN!\n");
-    }
-
     return f;
 }
