@@ -138,6 +138,9 @@ void path(Map *map, int r, int c, int direction, int leftright) {
 	
 }
 
+/// @brief the function checks if all cells have valid borders
+/// @param map the map of the matrix
+/// @return the function returns true or false depending on the cell borders
 bool checkMaze(Map *map) {
     for (int i = 1; i <= map->rows; i++) {
         for (int j = 1; j < map->cols; j++) {
