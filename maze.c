@@ -47,6 +47,7 @@ int startBorder(Map *map, int r, int c, int leftright);
 void changePos(int *r, int *c, int direction);
 int changeDir(Map *map, int r, int c, int leftright, int direction);
 void path(Map *map, int r, int c, int direction, int leftright);
+bool checkMaze(Map *map);
 
 int main(int argc, char *argv[]) {
     int startR = 0;
@@ -76,7 +77,7 @@ int main(int argc, char *argv[]) {
                 break;
 
             case C_TEST: //if the map is NULL it is Invalid
-                if(map == NULL) {
+                if(map == NULL || (map != NULL && checkMaze(map) == false)) {
                     fprintf(stdout, "Invalid\n");
                 }
                 else {
@@ -135,6 +136,24 @@ void path(Map *map, int r, int c, int direction, int leftright) {
         fprintf(stderr, "YOU CANNOT SEEK A PATH WHEN STARTING INSIDE THE MAZE! START AT THE ENTRANCE!\n");
     }
 	
+}
+
+bool checkMaze(Map *map) {
+    for (int i = 1; i <= map->rows; i++) {
+        for (int j = 1; j < map->cols; j++) {
+            if (isBorder(map, i, j, R_DIRECTION) != isBorder(map, i, j + 1, L_DIRECTION)) {
+                return false;
+            }
+        }
+    }
+    for (int i = 2; i <= map->rows; i++) {
+        for (int j = 1; j <= map->cols; j++) {
+            if (isBorder(map, i, j, U_DIRECTION) != isBorder(map, i - 1, j, D_DIRECTION)) {
+                return false;
+            }   
+        }
+    }
+    return true;
 }
 
 /// @brief the function changes the direction we are facing at
