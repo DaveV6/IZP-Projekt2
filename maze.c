@@ -119,16 +119,22 @@ int main(int argc, char *argv[]) {
 /// @param leftright left or  right path
 /// @return it will print the left or right path depending on user input
 void path(Map *map, int r, int c, int direction, int leftright) {
-	fprintf(stdout, "%d,%d\n", r, c);
+    if((r == 1 && isExit(map, r, c, U_DIRECTION)) || (r == map->rows && isExit(map, r, c, D_DIRECTION)) || (c == 1 && isExit(map, r, c, L_DIRECTION)) || (c == map->cols && isExit(map, r, c, R_DIRECTION))) {
+        fprintf(stdout, "%d,%d\n", r, c);
 
-	while (!isExit(map, r, c, direction)) {
-		direction = changeDir(map, r, c, leftright, direction);
+        while (!isExit(map, r, c, direction)) {
+            direction = changeDir(map, r, c, leftright, direction);
 
-		if (!isExit(map, r, c, direction)) {
-			changePos(&r, &c, direction);
-			fprintf(stdout, "%d,%d\n", r, c);
-		}
-	}
+            if (!isExit(map, r, c, direction)) {
+                changePos(&r, &c, direction);
+                fprintf(stdout, "%d,%d\n", r, c);
+            }
+        }
+    }
+    else {
+        fprintf(stderr, "YOU CANNOT SEEK A PATH WHEN STARTING INSIDE THE MAZE! START AT THE ENTRANCE!\n");
+    }
+	
 }
 
 /// @brief the function changes the direction we are facing at
