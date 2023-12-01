@@ -1,0 +1,10 @@
+maze.c:Zone.Identifier
+inputs/
+results/
+diff/
+maze-inv.txt
+maze-val.txt
+maze.txt
+test_maze.sh
+maze
+maze-test.sh
