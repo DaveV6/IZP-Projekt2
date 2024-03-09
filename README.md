@@ -1,3 +1,5 @@
+# Hodnotenie 13.9/14
+
 The program finds a path out of the maze using the right hand or left hand rule
 
 Program arguments:
